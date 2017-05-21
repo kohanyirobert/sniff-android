@@ -7,7 +7,7 @@
             android:singleLine="true"
             android:title="@string/api_url" />
         <EditTextPreference
-            android:key="api-url"
+            android:key="api-key"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/api_key" />

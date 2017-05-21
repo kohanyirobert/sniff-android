@@ -3,6 +3,7 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,12 +40,18 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mRequestQueue = Volley.newRequestQueue(this);
         mParameters = MainActivityParameters.create(getIntent());
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_main, MainFragment.create(mParameters))
-                .commit();
+        mRequestQueue = Volley.newRequestQueue(this);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String apiUrl = preferences.getString(API_URL, null);
+        String apiKey = preferences.getString(API_KEY, null);
+        if (apiUrl == null || apiKey == null) {
+            showFragmentMain();
+            showFragmentSettings();
+        } else {
+            showFragmentMain();
+        }
     }
 
     @Override
@@ -58,11 +65,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_settings:
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.frame_main, new SettingsFragment())
-                        .addToBackStack(null)
-                        .commit();
+                showFragmentSettings();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -109,5 +112,20 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
     @Override
     public void onSendFinished() {
         MainActivity.this.finish();
+    }
+
+    private void showFragmentSettings() {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frame_layout_main, new SettingsFragment())
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private int showFragmentMain() {
+        return getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frame_layout_main, MainFragment.create(mParameters))
+                .commit();
     }
 }

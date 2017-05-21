@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="MainActivityTest" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests" nameIsGenerated="true">
+  <configuration default="false" name="MainActivityTestSuite" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests" nameIsGenerated="true">
     <module name="app" />
     <option name="TESTING_TYPE" value="2" />
     <option name="INSTRUMENTATION_RUNNER_CLASS" value="android.support.test.runner.AndroidJUnitRunner" />
     <option name="METHOD_NAME" value="" />
-    <option name="CLASS_NAME" value="com.github.kohanyirobert.sniff.activity.MainActivityTest" />
+    <option name="CLASS_NAME" value="com.github.kohanyirobert.sniff.activity.MainActivityTestSuite" />
     <option name="PACKAGE_NAME" value="" />
     <option name="EXTRA_OPTIONS" value="" />
     <option name="PREFERRED_AVD" value="" />

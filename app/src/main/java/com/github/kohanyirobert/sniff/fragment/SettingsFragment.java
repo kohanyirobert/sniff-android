@@ -5,7 +5,7 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 
 import com.github.kohanyirobert.sniff.R;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+public final class SettingsFragment extends PreferenceFragmentCompat {
 
     public static final String API_URL = "api-url";
     public static final String API_KEY = "api-key";

@@ -59,13 +59,20 @@ public final class MainFragment extends Fragment {
 
     public interface SendClickListener {
 
-        void onSendClicked(Map<String, String> tags, SendDoneListener listener);
+        void onSendClicked(Map<String, String> tags, SendDoneListener done);
 
         void onSendFinished();
     }
 
     private MainActivityParameters mMainActivityParameters;
     private SendClickListener mSendListener;
+
+    private CoordinatorLayout mMainCoordinatorLayout;
+    private ConstraintLayout mMainConstraintLayout;
+    private TextView mVideoTitleTextView;
+    private EditText mArtistEditText;
+    private EditText mTitleEditText;
+    private FloatingActionButton mSendFloatingButton;
 
     @Override
     public void onAttach(Context context) {
@@ -76,32 +83,29 @@ public final class MainFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
-        final CoordinatorLayout mainCoordinatorLayout = (CoordinatorLayout) inflater.inflate(R.layout.fragment_main, container, false);
-        final ConstraintLayout mainConstraintLayout = (ConstraintLayout) mainCoordinatorLayout.findViewById(R.id.constraint_layout_main);
-        final TextView videoTitleTextView = (TextView) mainConstraintLayout.findViewById(R.id.text_view_video_title);
-        final EditText artistEditText = (EditText) mainConstraintLayout.findViewById(R.id.edit_text_artist);
-        final EditText titleEditText = (EditText) mainConstraintLayout.findViewById(R.id.edit_text_title);
-        final FloatingActionButton sendFloatingButton = (FloatingActionButton) mainConstraintLayout.findViewById(R.id.floating_button_send);
+        mMainCoordinatorLayout = (CoordinatorLayout) inflater.inflate(R.layout.fragment_main, container, false);
+        mMainConstraintLayout = (ConstraintLayout) mMainCoordinatorLayout.findViewById(R.id.constraint_layout_main);
+        mVideoTitleTextView = (TextView) mMainConstraintLayout.findViewById(R.id.text_view_video_title);
+        mArtistEditText = (EditText) mMainConstraintLayout.findViewById(R.id.edit_text_artist);
+        mTitleEditText = (EditText) mMainConstraintLayout.findViewById(R.id.edit_text_title);
+        mSendFloatingButton = (FloatingActionButton) mMainConstraintLayout.findViewById(R.id.floating_button_send);
 
-        videoTitleTextView.setText(mMainActivityParameters.getVideoTitle());
-        artistEditText.setText(mMainActivityParameters.getArtist());
-        titleEditText.setText(mMainActivityParameters.getTitle());
+        mVideoTitleTextView.setText(mMainActivityParameters.getVideoTitle());
+        mArtistEditText.setText(mMainActivityParameters.getArtist());
+        mTitleEditText.setText(mMainActivityParameters.getTitle());
 
-        sendFloatingButton.setOnClickListener(new View.OnClickListener() {
+        mSendFloatingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                videoTitleTextView.setEnabled(false);
-                artistEditText.setEnabled(false);
-                titleEditText.setEnabled(false);
-                sendFloatingButton.setEnabled(false);
+                toogleEnabledOnViews();
                 Map<String, String> tags = new LinkedHashMap<>();
-                tags.put(ARTIST, artistEditText.getText().toString());
-                tags.put(TITLE, titleEditText.getText().toString());
+                tags.put(ARTIST, mArtistEditText.getText().toString());
+                tags.put(TITLE, mTitleEditText.getText().toString());
                 mSendListener.onSendClicked(tags, new SendDoneListener() {
                     @Override
                     public void onSendDone(String message) {
-                        sendFloatingButton.setImageResource(R.drawable.ic_done_white_18dp);
-                        Snackbar snackbar = Snackbar.make(mainCoordinatorLayout, R.string.ok, Snackbar.LENGTH_SHORT);
+                        mSendFloatingButton.setImageResource(R.drawable.ic_done_white_18dp);
+                        Snackbar snackbar = Snackbar.make(mMainCoordinatorLayout, message, Snackbar.LENGTH_SHORT);
                         snackbar.addCallback(new Snackbar.Callback() {
                             @Override
                             public void onDismissed(Snackbar transientBottomBar, int event) {
@@ -113,6 +117,13 @@ public final class MainFragment extends Fragment {
                 });
             }
         });
-        return mainCoordinatorLayout;
+        return mMainCoordinatorLayout;
+    }
+
+    private void toogleEnabledOnViews() {
+        mVideoTitleTextView.setEnabled(!mVideoTitleTextView.isEnabled());
+        mArtistEditText.setEnabled(!mArtistEditText.isEnabled());
+        mTitleEditText.setEnabled(!mTitleEditText.isEnabled());
+        mSendFloatingButton.setEnabled(!mSendFloatingButton.isEnabled());
     }
 }

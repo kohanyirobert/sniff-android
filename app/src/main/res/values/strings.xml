@@ -6,6 +6,7 @@
     <string name="video_title">Video title</string>
     <string name="artist">Artist</string>
     <string name="title">Title</string>
-    <string name="ok">OK</string>
-    <string name="error">Error</string>
+    <string name="send_request_success">Request sent successfully.</string>
+    <string name="send_request_failure">Fail to send request.</string>
+    <string name="required_settings_missing">Must specify required settings.</string>
 </resources>

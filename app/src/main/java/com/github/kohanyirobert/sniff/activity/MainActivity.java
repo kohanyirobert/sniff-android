@@ -3,8 +3,9 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -17,7 +18,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.github.kohanyirobert.sniff.R;
-import com.github.kohanyirobert.sniff.fragment.MainFragment;
 import com.github.kohanyirobert.sniff.fragment.SettingsFragment;
 
 import org.json.JSONException;
@@ -26,12 +26,13 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendClickListener;
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendDoneListener;
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.create;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 
-public class MainActivity extends AppCompatActivity implements MainFragment.SendClickListener {
-
-    private static final String TAG = MainActivity.class.getName();
+public class MainActivity extends AppCompatActivity implements SendClickListener {
 
     private MainActivityParameters mParameters;
     private RequestQueue mRequestQueue;
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String apiUrl = preferences.getString(API_URL, null);
         String apiKey = preferences.getString(API_KEY, null);
-        if (apiUrl == null || apiKey == null) {
+        if (TextUtils.isEmpty(apiUrl) || TextUtils.isEmpty(apiKey)) {
             showFragmentMain();
             showFragmentSettings();
         } else {
@@ -73,40 +74,15 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
     }
 
     @Override
-    public void onSendClicked(Map<String, String> tags, final MainFragment.SendDoneListener done) {
-        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+    public void onSendClicked(Map<String, String> tags, SendDoneListener done) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String apiUrl = preferences.getString(API_URL, null);
-        final String apiKey = preferences.getString(API_KEY, null);
-        JSONObject postBody = new JSONObject();
-        try {
-            postBody.put("url", mParameters.getNormalizedUrl());
-            postBody.put("tags", tags);
-        } catch (JSONException e) {
-            throw new IllegalArgumentException();
+        String apiKey = preferences.getString(API_KEY, null);
+        if (apiUrl == null && apiKey == null) {
+            done.onSendDone(getResources().getString(R.string.required_settings_missing));
+        } else {
+            sendPostBody(apiUrl, apiKey, createPostBody(tags), done);
         }
-        Log.v(TAG, String.format("Sending JSON: %s", postBody));
-        Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                done.onSendDone(getResources().getString(R.string.ok));
-            }
-        };
-        Response.ErrorListener errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                done.onSendDone(getResources().getString(R.string.error));
-            }
-        };
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, apiUrl, postBody, listener, errorListener) {
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("x-api-key", apiKey);
-                return headers;
-            }
-        };
-        mRequestQueue.add(request);
     }
 
     @Override
@@ -125,7 +101,43 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
     private int showFragmentMain() {
         return getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.frame_layout_main, MainFragment.create(mParameters))
+                .replace(R.id.frame_layout_main, create(mParameters))
                 .commit();
+    }
+
+    @NonNull
+    private JSONObject createPostBody(Map<String, String> tags) {
+        JSONObject postBody = new JSONObject();
+        try {
+            postBody.put("url", mParameters.getNormalizedUrl());
+            postBody.put("tags", tags);
+        } catch (JSONException e) {
+            throw new IllegalArgumentException();
+        }
+        return postBody;
+    }
+
+    private void sendPostBody(final String apiUrl, final String apiKey, final JSONObject postBody, final SendDoneListener done) {
+        Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                done.onSendDone(getResources().getString(R.string.send_request_success));
+            }
+        };
+        Response.ErrorListener errorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                done.onSendDone(getResources().getString(R.string.send_request_failure));
+            }
+        };
+        mRequestQueue.add(new JsonObjectRequest(Request.Method.POST, apiUrl, postBody, listener, errorListener) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("x-api-key", apiKey);
+                return headers;
+            }
+        });
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/api_setting">
+    <PreferenceCategory android:title="@string/api_settings">
         <EditTextPreference
             android:key="api-url"
             android:selectAllOnFocus="true"

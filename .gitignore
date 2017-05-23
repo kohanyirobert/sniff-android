@@ -1,8 +1,5 @@
 build
-.idea/*
-!.idea/runConfigurations
-!.idea/runConfigurations/*
-!.idea/runConfigurations.xml
+.idea
 .gradle
 *.iml
 *.swp

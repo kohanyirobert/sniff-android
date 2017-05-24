@@ -7,8 +7,8 @@ import com.github.kohanyirobert.sniff.R;
 
 public final class SettingsFragment extends PreferenceFragmentCompat {
 
-    public static final String API_URL = "api-url";
-    public static final String API_KEY = "api-key";
+    public static final String API_URL = "api_url";
+    public static final String API_KEY = "api_key";
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {

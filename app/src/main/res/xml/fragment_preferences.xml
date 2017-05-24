@@ -3,13 +3,13 @@
     <PreferenceCategory android:title="@string/api_settings">
         <EditTextPreference
             android:inputType="textUri"
-            android:key="api-url"
+            android:key="api_url"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/api_url" />
         <EditTextPreference
             android:inputType="textPassword"
-            android:key="api-key"
+            android:key="api_key"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/api_key" />

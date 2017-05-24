@@ -2,11 +2,13 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/api_settings">
         <EditTextPreference
+            android:inputType="textUri"
             android:key="api-url"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/api_url" />
         <EditTextPreference
+            android:inputType="textPassword"
             android:key="api-key"
             android:selectAllOnFocus="true"
             android:singleLine="true"

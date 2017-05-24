@@ -23,6 +23,5 @@
     </application>
     <instrumentation
         android:name=".SniffInstrumentation"
-        android:targetPackage="com.github.kohanyirobert.sniff">
-    </instrumentation>
+        android:targetPackage="com.github.kohanyirobert.sniff" />
 </manifest>

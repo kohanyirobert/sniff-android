@@ -21,4 +21,8 @@
             </intent-filter>
         </activity>
     </application>
+    <instrumentation
+        android:name=".SniffInstrumentation"
+        android:targetPackage="com.github.kohanyirobert.sniff">
+    </instrumentation>
 </manifest>

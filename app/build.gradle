@@ -1,10 +1,16 @@
 apply plugin: 'com.android.application'
 
+ext {
+    targetPackage = 'com.github.kohanyirobert.sniff'
+    settingApiUrl = 'api_url'
+    settingApiKey = 'api_key'
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion '25.0.3'
     defaultConfig {
-        applicationId 'com.github.kohanyirobert.sniff'
+        applicationId targetPackage
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
@@ -35,4 +41,45 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+}
+
+def instrument(args) {
+    def command = []
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).indexOf("win") != -1) {
+        command.addAll(['cmd', '/c'])
+    }
+    command.addAll(['adb', 'shell', 'am', 'instrument'])
+    command.addAll(args)
+    command.add("${targetPackage}/${targetPackage}.SniffInstrumentation")
+    return command
+}
+
+task initSettings(type: Exec) {
+    def local = new Properties()
+    file('../local.properties').withInputStream {
+        local.load(it)
+    }
+    doFirst {
+        println "initializing settings: $local"
+    }
+    commandLine(instrument([
+            '-e', settingApiUrl, local[settingApiUrl],
+            '-e', settingApiKey, local[settingApiKey],
+    ]))
+    doLast {
+        println 'settings initialized'
+    }
+}
+
+task clearSettings(type: Exec) {
+    doFirst {
+        println 'clearing settings'
+    }
+    commandLine(instrument([
+            '-e', settingApiUrl, '',
+            '-e', settingApiKey, "''",
+    ]))
+    doLast {
+        println 'settings cleared'
+    }
 }

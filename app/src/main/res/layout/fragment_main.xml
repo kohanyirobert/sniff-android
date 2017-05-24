@@ -14,27 +14,23 @@
         android:orientation="vertical"
         app:layout_behavior="com.github.kohanyirobert.sniff.fragment.MainFragment$SnackbarBehavior">
 
-        <ScrollView
-            android:id="@+id/scroll_view_video_title"
+        <TextView
+            android:id="@+id/text_view_video_title"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
+            android:focusable="true"
+            android:gravity="start|bottom"
+            android:longClickable="true"
+            android:scrollbars="vertical"
+            android:text="Watch &quot;Lorem ipsum - dolor sit amet&quot; on YouTube"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+            android:textIsSelectable="true"
             app:layout_constraintBottom_toTopOf="@+id/view_divider"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/text_view_video_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="true"
-                android:longClickable="true"
-                android:text="Watch &quot;Lorem ipsum - dolor sit amet&quot; on YouTube"
-                android:textAppearance="@style/TextAppearance.AppCompat.Display3"
-                android:textIsSelectable="true"
-                tools:ignore="HardcodedText" />
-        </ScrollView>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
 
         <View
             android:id="@+id/view_divider"

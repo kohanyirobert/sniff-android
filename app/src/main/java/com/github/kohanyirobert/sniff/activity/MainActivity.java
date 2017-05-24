@@ -8,7 +8,6 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.JsonWriter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,16 +26,16 @@ import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.Volley;
 import com.github.kohanyirobert.sniff.R;
 import com.github.kohanyirobert.sniff.Utils;
+import com.github.kohanyirobert.sniff.fragment.MainFragment;
 import com.github.kohanyirobert.sniff.fragment.SettingsFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendClickListener;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendDoneListener;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.CANCELLED;
@@ -47,7 +46,7 @@ import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 import static java.lang.String.format;
 
-public class MainActivity extends AppCompatActivity implements SendClickListener {
+public class MainActivity extends AppCompatActivity implements OnBackStackChangedListener, SendClickListener {
 
     public static final String EXTRA_MODE = MainActivity.class.getPackage().getName() + ".EXTRA_MODE";
 
@@ -63,22 +62,19 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         mParameters = MainActivityParameters.create(getIntent());
         mRequestQueue = getRequestQueue();
         showFragmentMain();
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
+        shouldDisplayHomeUp();
     }
 
-    private RequestQueue getRequestQueue() {
-        RequestQueue queue;
-        if (mParameters.getMode() == MainActivityMode.TEST) {
-            queue = new RequestQueue(new NoCache(), new Network() {
-                @Override
-                public NetworkResponse performRequest(Request<?> request) throws VolleyError {
-                    return new NetworkResponse(null);
-                }
-            });
-            queue.start();
-        } else {
-            queue = Volley.newRequestQueue(this);
-        }
-        return queue;
+    @Override
+    public void onBackStackChanged() {
+        shouldDisplayHomeUp();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        getSupportFragmentManager().popBackStack();
+        return true;
     }
 
     @Override
@@ -121,6 +117,15 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         }
     }
 
+    @Override
+    public void onSendFinished() {
+        MainActivity.this.finish();
+    }
+
+    private void shouldDisplayHomeUp() {
+        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
+    }
+
     private int validateApiUrlAndKey(String apiUrl, String apiKey) {
         if (TextUtils.isEmpty(apiUrl) && TextUtils.isEmpty(apiKey)) {
             return R.string.missing_api_url_and_api_key;
@@ -149,9 +154,20 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         return 0;
     }
 
-    @Override
-    public void onSendFinished() {
-        MainActivity.this.finish();
+    private RequestQueue getRequestQueue() {
+        RequestQueue queue;
+        if (mParameters.getMode() == MainActivityMode.TEST) {
+            queue = new RequestQueue(new NoCache(), new Network() {
+                @Override
+                public NetworkResponse performRequest(Request<?> request) throws VolleyError {
+                    return new NetworkResponse(null);
+                }
+            });
+            queue.start();
+        } else {
+            queue = Volley.newRequestQueue(this);
+        }
+        return queue;
     }
 
     private void showFragmentSettings() {
@@ -163,9 +179,10 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
     }
 
     private int showFragmentMain() {
+        MainFragment fragment = create(mParameters);
         return getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.frame_layout_main, create(mParameters))
+                .replace(R.id.frame_layout_main, fragment)
                 .commit();
     }
 

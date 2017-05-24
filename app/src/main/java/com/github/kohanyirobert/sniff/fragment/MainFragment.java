@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -32,10 +33,21 @@ public final class MainFragment extends Fragment {
         }
 
         @Override
-        public boolean onDependentViewChanged(CoordinatorLayout parent, ConstraintLayout child, View dependency) {
-            float translationY = Math.min(0, dependency.getTranslationY() - dependency.getHeight());
+        public boolean onDependentViewChanged(CoordinatorLayout parent, final ConstraintLayout child, final View dependency) {
+            final float translationY = Math.min(0, dependency.getTranslationY() - dependency.getHeight());
             child.findViewById(R.id.floating_button_send).setTranslationY(translationY);
             return true;
+        }
+
+        @Override
+        public void onDependentViewRemoved(CoordinatorLayout parent, ConstraintLayout child, View dependency) {
+            child.findViewById(R.id.floating_button_send)
+                    .animate()
+                    .setStartDelay(0L)
+                    .setDuration(100L)
+                    .translationY(0.0f)
+                    .setInterpolator(new AccelerateInterpolator())
+                    .start();
         }
 
         @Override
@@ -56,9 +68,16 @@ public final class MainFragment extends Fragment {
         return fragment;
     }
 
+    public enum SendStatus {
+
+        SUCCESSFUL,
+        CANCELLED,
+        FAILED
+    }
+
     public interface SendDoneListener {
 
-        void onSendDone(String message);
+        void onSendDone(SendStatus status, String message);
     }
 
     public interface SendClickListener {
@@ -137,16 +156,25 @@ public final class MainFragment extends Fragment {
                 tags.put(TITLE, mTitleEditText.getText().toString());
                 mSendListener.onSendClicked(tags, new SendDoneListener() {
                     @Override
-                    public void onSendDone(String message) {
-                        mSendFloatingButton.setImageResource(R.drawable.ic_done_white_18dp);
-                        Snackbar snackbar = Snackbar.make(mMainCoordinatorLayout, message, Snackbar.LENGTH_SHORT);
-                        snackbar.addCallback(new Snackbar.Callback() {
-                            @Override
-                            public void onDismissed(Snackbar transientBottomBar, int event) {
-                                mSendListener.onSendFinished();
+                    public void onSendDone(SendStatus status, String message) {
+                        if (status == SendStatus.SUCCESSFUL) {
+                            mSendFloatingButton.setImageResource(R.drawable.ic_done_white_18dp);
+                        } else {
+                            toggleEnabledOnViews();
+                            mSendFloatingButton.setImageResource(R.drawable.ic_send_white_18dp);
+                        }
+                        if (status != SendStatus.CANCELLED) {
+                            Snackbar snackbar = Snackbar.make(mMainCoordinatorLayout, message, Snackbar.LENGTH_SHORT);
+                            if (status == SendStatus.SUCCESSFUL) {
+                                snackbar.addCallback(new Snackbar.Callback() {
+                                    @Override
+                                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                                        mSendListener.onSendFinished();
+                                    }
+                                });
                             }
-                        });
-                        snackbar.show();
+                            snackbar.show();
+                        }
                     }
                 });
             }

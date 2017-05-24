@@ -8,6 +8,8 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.JsonWriter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,7 +22,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.Volley;
 import com.github.kohanyirobert.sniff.R;
@@ -29,20 +31,27 @@ import com.github.kohanyirobert.sniff.fragment.SettingsFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 
-import java.nio.charset.StandardCharsets;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendClickListener;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendDoneListener;
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.CANCELLED;
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.FAILED;
+import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.SUCCESSFUL;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.create;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
+import static java.lang.String.format;
 
 public class MainActivity extends AppCompatActivity implements SendClickListener {
 
     public static final String EXTRA_MODE = MainActivity.class.getPackage().getName() + ".EXTRA_MODE";
+
+    private static final String TAG = MainActivity.class.getName();
 
     private MainActivityParameters mParameters;
     private RequestQueue mRequestQueue;
@@ -62,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
             queue = new RequestQueue(new NoCache(), new Network() {
                 @Override
                 public NetworkResponse performRequest(Request<?> request) throws VolleyError {
-                    return new NetworkResponse(new JSONObject().toString().getBytes(StandardCharsets.UTF_8));
+                    return new NetworkResponse(null);
                 }
             });
             queue.start();
@@ -108,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
                 }
             });
             snackbar.show();
+            done.onSendDone(CANCELLED, null);
         }
     }
 
@@ -164,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         JSONObject postBody = new JSONObject();
         try {
             postBody.put("url", mParameters.getNormalizedUrl());
-            postBody.put("tags", tags);
+            postBody.put("tags", new JSONObject(tags));
         } catch (JSONException e) {
             throw new IllegalArgumentException();
         }
@@ -172,19 +182,31 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
     }
 
     private void sendPostBody(final String apiUrl, final String apiKey, final JSONObject postBody, final SendDoneListener done) {
-        Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
+        Log.v(TAG, format("request: %s%n", postBody.toString()));
+        mRequestQueue.add(new JsonRequest<String>(Request.Method.POST, apiUrl, postBody.toString(), null, null) {
+
             @Override
-            public void onResponse(JSONObject response) {
-                done.onSendDone(getResources().getString(R.string.send_request_success));
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                final String message = response.data == null ? null : new String(response.data);
+                if (response.statusCode >= 200 && response.statusCode < 300) {
+                    Log.v(TAG, format("status: %s, response: %s%n", response.statusCode, message));
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            done.onSendDone(SUCCESSFUL, getResources().getString(R.string.send_request_success));
+                        }
+                    });
+                } else {
+                    Log.e(TAG, format("status: %s, response: %s%n", response.statusCode, message));
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            done.onSendDone(FAILED, getResources().getString(R.string.send_request_failure));
+                        }
+                    });
+                }
+                return null;
             }
-        };
-        Response.ErrorListener errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                done.onSendDone(error.getMessage());
-            }
-        };
-        mRequestQueue.add(new JsonObjectRequest(Request.Method.POST, apiUrl, postBody, listener, errorListener) {
 
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {

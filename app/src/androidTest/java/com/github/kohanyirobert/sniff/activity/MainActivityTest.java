@@ -3,14 +3,18 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.design.widget.TextInputLayout;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.RequiresDevice;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.widget.EditText;
+import android.view.View;
 
 import com.github.kohanyirobert.sniff.R;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,10 +22,7 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.pressBack;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -34,21 +35,55 @@ import static org.hamcrest.CoreMatchers.allOf;
 @RequiresDevice
 public class MainActivityTest {
 
-    private static final String TEST_ARTIST = "test artist";
-    private static final String TEST_TITLE = "test title";
-    private static final String TEST_VIDEO_TITLE = format("%s - %s", TEST_ARTIST, TEST_TITLE);
+    private static final String ARTIST = "test artist";
+    private static final String TITLE = "test title";
 
-    private static final String EXTRA_TEXT = "https://youtu.be/test";
-    private static final String EXTRA_SUBJECT = format("Watch \"%s\" on YouTube", TEST_VIDEO_TITLE);
+    private static final String VIDEO_TITLE_WITH_DASH = format("%s - %s", ARTIST, TITLE);
+    private static final String VIDEO_TITLE_WITHOUT_DASH = format("%s %s", ARTIST, TITLE);
 
-    private static final String SETTING_API_URL = "https://test.api/url";
-    private static final String SETTING_API_KEY = "test-api-key";
+    private static final String TEXT = "https://youtu.be/ZeJr9a21asI";
+
+    private static final String SUBJECT_FORMAT = "Watch \"%s\" on YouTube";
+    private static final String SUBJECT_WITH_DASH = format(SUBJECT_FORMAT, VIDEO_TITLE_WITH_DASH);
+    private static final String SUBJECT_WITHOUT_DASH = format(SUBJECT_FORMAT, VIDEO_TITLE_WITHOUT_DASH);
+
+    private static final String BAD_SUBJECT_FORMAT = "Watch %s on YouTube";
+    private static final String BAD_SUBJECT_WITH_DASH = format(BAD_SUBJECT_FORMAT, VIDEO_TITLE_WITH_DASH);
+
+    private static final String VALID_API_URL = "https://4pk2ep3glo.execute-api.us-east-1.amazonaws.com/test";
+    private static final String VALID_API_KEY = "VzXyJ3VjMazRYhuCZGFTFhmxhEqNWQAxr9babARi";
+
+    private static final String INVALID_API_URL = "https://1234.execute-api.us-dog-2.amazonaws.biz/test";
+    private static final String INVALID_API_KEY = "Cr9sxU1";
+
+    public static Matcher<View> hasTextInputLayoutErrorText(final int resourceId) {
+        return new TypeSafeMatcher<View>() {
+
+            @Override
+            public boolean matchesSafely(View view) {
+                if (!(view instanceof TextInputLayout)) {
+                    return false;
+                }
+
+                CharSequence error = ((TextInputLayout) view).getError();
+                if (error == null) {
+                    return false;
+                }
+                return InstrumentationRegistry.getTargetContext().getResources().getString(resourceId).equals(error.toString());
+            }
+
+            @Override
+            public void describeTo(Description description) {
+            }
+        };
+    }
 
     public static Intent newIntent(String text, String subject) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
         Assert.assertNull(intent.getCategories());
         intent.setType("plain/text");
+        intent.putExtra(MainActivity.EXTRA_MODE, MainActivityMode.TEST.name());
         intent.putExtra(Intent.EXTRA_TEXT, text);
         intent.putExtra(Intent.EXTRA_SUBJECT, subject);
         return intent;
@@ -74,57 +109,139 @@ public class MainActivityTest {
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, false);
 
     @Test
-    public void test_apiUrlOrKeyNotSet_displaySettingsFragment() throws Exception {
-        clearPreferences();
-        mActivityRule.launchActivity(newIntent(EXTRA_TEXT, EXTRA_SUBJECT));
+    public void testVideoTitle_whenSubjectInvalid_shouldDisplaySubjectUntouched() {
+        mActivityRule.launchActivity(newIntent(TEXT, BAD_SUBJECT_WITH_DASH));
 
-        onView(withText(R.string.api_settings))
-                .check((matches(isDisplayed())));
-
-        onView(withText(R.string.api_url))
-                .check((matches(isDisplayed())))
-                .perform(click());
-
-        onView(allOf(hasFocus(), isAssignableFrom(EditText.class)))
-                .check(matches(withText("")));
-
-        onView(withText(R.string.api_url))
-                .perform(pressBack())
-                .perform(pressBack());
-
-        onView(withText(R.string.api_key))
-                .check((matches(isDisplayed())))
-                .perform(click());
-
-        onView(allOf(hasFocus(), isAssignableFrom(EditText.class)))
-                .check(matches(withText("")));
-
-        onView(withText(R.string.api_key))
-                .perform(pressBack())
-                .perform(pressBack());
+        onView(withId(R.id.text_view_video_title))
+                .check(matches(withText(BAD_SUBJECT_WITH_DASH)));
     }
 
     @Test
-    public void test_apiUrlAndKeySet_displayMainFragment() throws Exception {
-        setPreferences(SETTING_API_URL, SETTING_API_KEY);
-        mActivityRule.launchActivity(newIntent(EXTRA_TEXT, EXTRA_SUBJECT));
+    public void testVideoTitle_whenSubjectValid_shouldDisplayVideoTitle() {
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
 
-        onView(withId(R.id.coordinator_layout_main))
+        onView(withId(R.id.text_view_video_title))
+                .check(matches(withText(VIDEO_TITLE_WITH_DASH)));
+    }
+
+    @Test
+    public void testArtist_whenVideoTitleWithoutDash_shouldDisplayNoArtistOrTitle() {
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITHOUT_DASH));
+
+        onView(withId(R.id.edit_text_artist))
+                .check(matches(withText("")));
+
+        onView(withId(R.id.edit_text_title))
+                .check(matches(withText("")));
+
+        onView(withId(R.id.input_layout_artist))
+                .check(matches(hasTextInputLayoutErrorText(R.string.required_artist)));
+
+        onView(withId(R.id.input_layout_title))
+                .check(matches(hasTextInputLayoutErrorText(R.string.required_title)));
+    }
+
+    @Test
+    public void testArtist_whenVideoTitleWithDash_shouldDisplayArtistOrTitle() {
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.edit_text_artist))
+                .check(matches(withText(ARTIST)));
+
+        onView(withId(R.id.edit_text_title))
+                .check(matches(withText(TITLE)));
+    }
+
+    @Test
+    public void testSend_whenApiUrlAndKeyMissing_shouldNotifyUser() throws Exception {
+        setPreferences(null, null);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text)))
+                .check(matches(withText(R.string.missing_api_url_and_api_key)));
+    }
+
+    @Test
+    public void testSend_whenApiUrlMissing_shouldNotifyUser() throws Exception {
+        setPreferences(null, VALID_API_KEY);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.missing_api_url)))
                 .check(matches(isDisplayed()));
     }
 
     @Test
-    public void test_textAndSubjectCorrect() throws Exception {
-        setPreferences(SETTING_API_URL, SETTING_API_KEY);
-        mActivityRule.launchActivity(newIntent(EXTRA_TEXT, EXTRA_SUBJECT));
+    public void testSend_whenApiKeyMissing_shouldNotifyUser() throws Exception {
+        setPreferences(VALID_API_URL, null);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.missing_api_key)))
+                .check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testSend_whenApiUrlAndKeyInvalid_shouldFail() throws Exception {
+        setPreferences(INVALID_API_URL, INVALID_API_KEY);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.invalid_api_url_and_api_key)))
+                .check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testSend_whenApiUrlInvalid_shouldFail() throws Exception {
+        setPreferences(INVALID_API_URL, VALID_API_KEY);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.invalid_api_url)))
+                .check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testSend_whenApiKeyInvalid_shouldFail() throws Exception {
+        setPreferences(VALID_API_URL, INVALID_API_KEY);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.invalid_api_key)))
+                .check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void testSend_whenParamsValid_shouldWork() throws Exception {
+        setPreferences(VALID_API_URL, VALID_API_KEY);
+        mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
 
         onView(withId(R.id.text_view_video_title))
-                .check(matches(withText(TEST_VIDEO_TITLE)));
+                .check(matches(withText(VIDEO_TITLE_WITH_DASH)));
 
         onView(withId(R.id.edit_text_artist))
-                .check(matches(withText(TEST_ARTIST)));
+                .check(matches(withText(ARTIST)));
 
         onView(withId(R.id.edit_text_title))
-                .check(matches(withText(TEST_TITLE)));
+                .check(matches(withText(TITLE)));
+
+        onView(withId(R.id.floating_button_send))
+                .perform(click());
+
+        onView(allOf(withId(android.support.design.R.id.snackbar_text), withText(R.string.send_request_success)))
+                .check(matches(isDisplayed()));
     }
 }

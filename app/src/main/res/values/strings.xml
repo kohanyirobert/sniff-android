@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Sniff</string>
+    <string name="settings">API settings</string>
     <string name="api_settings">API settings</string>
     <string name="api_key">API key</string>
     <string name="api_url">API URL</string>
@@ -8,5 +9,12 @@
     <string name="title">Title</string>
     <string name="send_request_success">Request sent successfully.</string>
     <string name="send_request_failure">Fail to send request.</string>
-    <string name="required_settings_missing">Must specify required settings.</string>
+    <string name="invalid_api_url">API URL invalid.</string>
+    <string name="invalid_api_key">API key invalid.</string>
+    <string name="missing_api_url_and_api_key">API URL and key missing.</string>
+    <string name="missing_api_url">API URL missing.</string>
+    <string name="missing_api_key">API key missing.</string>
+    <string name="invalid_api_url_and_api_key">API URL and key invalid.</string>
+    <string name="required_artist">Required</string>
+    <string name="required_title">Required</string>
 </resources>

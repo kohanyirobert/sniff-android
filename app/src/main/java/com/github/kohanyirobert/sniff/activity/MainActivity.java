@@ -4,25 +4,33 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Network;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.NoCache;
 import com.android.volley.toolbox.Volley;
 import com.github.kohanyirobert.sniff.R;
+import com.github.kohanyirobert.sniff.Utils;
 import com.github.kohanyirobert.sniff.fragment.SettingsFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +42,8 @@ import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 
 public class MainActivity extends AppCompatActivity implements SendClickListener {
 
+    public static final String EXTRA_MODE = MainActivity.class.getPackage().getName() + ".EXTRA_MODE";
+
     private MainActivityParameters mParameters;
     private RequestQueue mRequestQueue;
 
@@ -42,17 +52,24 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mParameters = MainActivityParameters.create(getIntent());
-        mRequestQueue = Volley.newRequestQueue(this);
+        mRequestQueue = getRequestQueue();
+        showFragmentMain();
+    }
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String apiUrl = preferences.getString(API_URL, null);
-        String apiKey = preferences.getString(API_KEY, null);
-        if (TextUtils.isEmpty(apiUrl) || TextUtils.isEmpty(apiKey)) {
-            showFragmentMain();
-            showFragmentSettings();
+    private RequestQueue getRequestQueue() {
+        RequestQueue queue;
+        if (mParameters.getMode() == MainActivityMode.TEST) {
+            queue = new RequestQueue(new NoCache(), new Network() {
+                @Override
+                public NetworkResponse performRequest(Request<?> request) throws VolleyError {
+                    return new NetworkResponse(new JSONObject().toString().getBytes(StandardCharsets.UTF_8));
+                }
+            });
+            queue.start();
         } else {
-            showFragmentMain();
+            queue = Volley.newRequestQueue(this);
         }
+        return queue;
     }
 
     @Override
@@ -78,11 +95,48 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String apiUrl = preferences.getString(API_URL, null);
         String apiKey = preferences.getString(API_KEY, null);
-        if (apiUrl == null && apiKey == null) {
-            done.onSendDone(getResources().getString(R.string.required_settings_missing));
-        } else {
+        int messageId = validateApiUrlAndKey(apiUrl, apiKey);
+        if (messageId == 0) {
             sendPostBody(apiUrl, apiKey, createPostBody(tags), done);
+        } else {
+            final CoordinatorLayout parent = (CoordinatorLayout) findViewById(R.id.coordinator_layout_main);
+            final Snackbar snackbar = Snackbar.make(parent, messageId, Snackbar.LENGTH_LONG);
+            snackbar.setAction(R.string.settings, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showFragmentSettings();
+                }
+            });
+            snackbar.show();
         }
+    }
+
+    private int validateApiUrlAndKey(String apiUrl, String apiKey) {
+        if (TextUtils.isEmpty(apiUrl) && TextUtils.isEmpty(apiKey)) {
+            return R.string.missing_api_url_and_api_key;
+        }
+
+        if (TextUtils.isEmpty(apiUrl)) {
+            return R.string.missing_api_url;
+        }
+
+        if (TextUtils.isEmpty(apiKey)) {
+            return R.string.missing_api_key;
+        }
+
+        if (!Utils.isApiUrlValid(apiUrl) && !Utils.isApiKeyValid(apiKey)) {
+            return R.string.invalid_api_url_and_api_key;
+        }
+
+        if (!Utils.isApiUrlValid(apiUrl)) {
+            return R.string.invalid_api_url;
+        }
+
+        if (!Utils.isApiKeyValid(apiKey)) {
+            return R.string.invalid_api_key;
+        }
+
+        return 0;
     }
 
     @Override
@@ -127,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements SendClickListener
         Response.ErrorListener errorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                done.onSendDone(getResources().getString(R.string.send_request_failure));
+                done.onSendDone(error.getMessage());
             }
         };
         mRequestQueue.add(new JsonObjectRequest(Request.Method.POST, apiUrl, postBody, listener, errorListener) {

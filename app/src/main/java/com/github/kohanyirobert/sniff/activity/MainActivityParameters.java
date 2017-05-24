@@ -3,6 +3,7 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import static java.lang.String.format;
 
@@ -23,22 +24,24 @@ public final class MainActivityParameters implements Parcelable {
         }
     };
 
-
     public static MainActivityParameters create(Intent intent) {
         return new MainActivityParameters(
+                MainActivityMode.valueOf(intent.getStringExtra(MainActivity.EXTRA_MODE), MainActivityMode.PRODUCTION),
                 intent.getStringExtra(Intent.EXTRA_TEXT),
                 intent.getStringExtra(Intent.EXTRA_SUBJECT));
     }
 
-    private String mUrl;
+    private MainActivityMode mMode;
+    private String mText;
     private String mSubject;
     private String mVideoTitle;
     private String mNormalizedUrl;
     private String mArtist;
     private String mTitle;
 
-    private MainActivityParameters(Parcel in) {
-        mUrl = in.readString();
+    public MainActivityParameters(Parcel in) {
+        mMode = MainActivityMode.valueOf(in.readString(), MainActivityMode.PRODUCTION);
+        mText = in.readString();
         mSubject = in.readString();
         mNormalizedUrl = in.readString();
         mVideoTitle = in.readString();
@@ -46,9 +49,10 @@ public final class MainActivityParameters implements Parcelable {
         mTitle = in.readString();
     }
 
-    private MainActivityParameters(String mUrl, String mSubject) {
-        this.mUrl = mUrl;
-        this.mSubject = mSubject;
+    private MainActivityParameters(@NonNull MainActivityMode mode, String text, String subject) {
+        mMode = mode;
+        mText = text;
+        mSubject = subject;
         init();
     }
 
@@ -59,7 +63,8 @@ public final class MainActivityParameters implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mUrl);
+        dest.writeString(mMode.name());
+        dest.writeString(mText);
         dest.writeString(mSubject);
         dest.writeString(mNormalizedUrl);
         dest.writeString(mVideoTitle);
@@ -67,8 +72,12 @@ public final class MainActivityParameters implements Parcelable {
         dest.writeString(mTitle);
     }
 
-    public String getUrl() {
-        return mUrl;
+    public MainActivityMode getMode() {
+        return mMode;
+    }
+
+    public String getText() {
+        return mText;
     }
 
     public String getSubject() {
@@ -92,20 +101,24 @@ public final class MainActivityParameters implements Parcelable {
     }
 
     private void init() {
-        initNormalizeUrl();
+        initNormalizedUrl();
         initVideoTitle();
         initArtistAndTitle();
     }
 
-    private void initNormalizeUrl() {
-        int index = mUrl.lastIndexOf('/');
-        mNormalizedUrl = format(YOUTUBE_URL_FORMAT, mUrl.substring(index + 1));
+    private void initNormalizedUrl() {
+        int index = mText.lastIndexOf('/');
+        mNormalizedUrl = format(YOUTUBE_URL_FORMAT, mText.substring(index + 1));
     }
 
     private void initVideoTitle() {
         int startIndex = mSubject.indexOf('"');
         int endIndex = mSubject.lastIndexOf('"');
-        mVideoTitle = mSubject.substring(startIndex + 1, endIndex);
+        if (startIndex != -1 && endIndex != -1 && startIndex != endIndex) {
+            mVideoTitle = mSubject.substring(startIndex + 1, endIndex);
+        } else {
+            mVideoTitle = mSubject;
+        }
     }
 
     private void initArtistAndTitle() {

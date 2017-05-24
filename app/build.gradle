@@ -76,7 +76,7 @@ task clearSettings(type: Exec) {
         println 'clearing settings'
     }
     commandLine(instrument([
-            '-e', settingApiUrl, '',
+            '-e', settingApiUrl, "''",
             '-e', settingApiKey, "''",
     ]))
     doLast {

@@ -41,7 +41,6 @@ import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendDoneListe
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.CANCELLED;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.FAILED;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendStatus.SUCCESSFUL;
-import static com.github.kohanyirobert.sniff.fragment.MainFragment.create;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 import static java.lang.String.format;
@@ -54,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements OnBackStackChange
 
     private MainActivityParameters mParameters;
     private RequestQueue mRequestQueue;
+    private MainFragment mMainFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +61,29 @@ public class MainActivity extends AppCompatActivity implements OnBackStackChange
         setContentView(R.layout.activity_main);
         mParameters = MainActivityParameters.create(getIntent());
         mRequestQueue = getRequestQueue();
-        showFragmentMain();
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+        if (savedInstanceState == null) {
+            mMainFragment = MainFragment.create(mParameters);
+        } else {
+            mMainFragment = (MainFragment) getSupportFragmentManager()
+                    .getFragment(savedInstanceState, MainFragment.class.getName());
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         shouldDisplayHomeUp();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frame_layout_main, mMainFragment)
+                .commit();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        getSupportFragmentManager().putFragment(outState, MainFragment.class.getName(), mMainFragment);
     }
 
     @Override
@@ -175,14 +195,6 @@ public class MainActivity extends AppCompatActivity implements OnBackStackChange
                 .beginTransaction()
                 .replace(R.id.frame_layout_main, new SettingsFragment())
                 .addToBackStack(null)
-                .commit();
-    }
-
-    private int showFragmentMain() {
-        MainFragment fragment = create(mParameters);
-        return getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_layout_main, fragment)
                 .commit();
     }
 

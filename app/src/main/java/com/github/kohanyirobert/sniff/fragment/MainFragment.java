@@ -2,6 +2,7 @@ package com.github.kohanyirobert.sniff.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -56,9 +57,12 @@ public final class MainFragment extends Fragment {
         }
     }
 
+    private static final String FOCUSED_ID = "FOCUSED_ID";
+    private static final String FOCUS_SELECTION_START = "FOCUS_SELECTION_START";
+    private static final String FOCUS_SELECTION_END = "FOCUS_SELECTION_END";
+
     private static final String ARTIST = "ARTIST";
     private static final String TITLE = "TITLE";
-
 
     public static MainFragment create(MainActivityParameters mParameters) {
         Bundle args = new Bundle();
@@ -92,7 +96,7 @@ public final class MainFragment extends Fragment {
         private final TextInputEditText mEditText;
         private final int mMessageId;
 
-        public CheckHasErrorOnFocusChangeListener(TextInputLayout inputLayout, TextInputEditText editText, int messageId) {
+        CheckHasErrorOnFocusChangeListener(TextInputLayout inputLayout, TextInputEditText editText, int messageId) {
             mInputLayout = inputLayout;
             mEditText = editText;
             mMessageId = messageId;
@@ -180,6 +184,37 @@ public final class MainFragment extends Fragment {
             }
         });
         return mMainCoordinatorLayout;
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            mArtistEditText.setText(savedInstanceState.getString(ARTIST));
+            mTitleEditText.setText(savedInstanceState.getString(TITLE));
+            int focusedId = savedInstanceState.getInt(FOCUSED_ID);
+            if (focusedId != 0) {
+                int selectionStart = savedInstanceState.getInt(FOCUS_SELECTION_START);
+                int selectionEnd = savedInstanceState.getInt(FOCUS_SELECTION_END);
+                EditText editText = (EditText) mMainCoordinatorLayout.findViewById(focusedId);
+                editText.setSelection(selectionStart, selectionEnd);
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ARTIST, mArtistEditText.getText().toString());
+        outState.putString(TITLE, mTitleEditText.getText().toString());
+
+        View focusedView = getActivity().getCurrentFocus();
+        if (focusedView instanceof TextInputEditText) {
+            TextInputEditText editText = (TextInputEditText) focusedView;
+            outState.putInt(FOCUSED_ID, editText.getId());
+            outState.putInt(FOCUS_SELECTION_START, editText.getSelectionStart());
+            outState.putInt(FOCUS_SELECTION_END, editText.getSelectionEnd());
+        }
     }
 
     private void toggleEnabledOnViews() {

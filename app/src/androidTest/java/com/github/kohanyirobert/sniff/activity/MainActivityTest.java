@@ -1,13 +1,22 @@
 package com.github.kohanyirobert.sniff.activity;
 
+import android.app.SearchableInfo;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TextInputLayout;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.action.ViewActions;
+import android.support.test.espresso.core.deps.guava.util.concurrent.ExecutionError;
 import android.support.test.filters.RequiresDevice;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.SearchCondition;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiWatcher;
+import android.support.test.uiautomator.Until;
+import android.view.Surface;
 import android.view.View;
 
 import com.github.kohanyirobert.sniff.R;
@@ -15,13 +24,22 @@ import com.github.kohanyirobert.sniff.R;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Assert;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.*;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -30,6 +48,7 @@ import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 @RequiresDevice
@@ -81,7 +100,7 @@ public class MainActivityTest {
     public static Intent newIntent(String text, String subject) {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_SEND);
-        Assert.assertNull(intent.getCategories());
+        assertNull(intent.getCategories());
         intent.setType("plain/text");
         intent.putExtra(MainActivity.EXTRA_MODE, MainActivityMode.TEST.name());
         intent.putExtra(Intent.EXTRA_TEXT, text);
@@ -93,7 +112,7 @@ public class MainActivityTest {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(InstrumentationRegistry.getTargetContext());
         SharedPreferences.Editor editor = preferences.edit();
         editor.clear();
-        Assert.assertTrue(editor.commit());
+        assertTrue(editor.commit());
     }
 
     public static void setPreferences(String apiUrl, String apiKey) {
@@ -102,11 +121,44 @@ public class MainActivityTest {
         editor.clear();
         editor.putString(API_URL, apiUrl);
         editor.putString(API_KEY, apiKey);
-        Assert.assertTrue(editor.commit());
+        assertTrue(editor.commit());
     }
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(MainActivity.class, true, false);
+
+    private UiDevice mDevice;
+
+    @Before
+    public void before() {
+        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    }
+
+    @Test
+    public void testRotation_whenRotated_shouldRotate() throws Exception {
+        try {
+            mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+            setOrientationNaturalAndWait();
+            assertEquals(Surface.ROTATION_0, mDevice.getDisplayRotation());
+
+            setOrientationLeftAndWait();
+            assertEquals(Surface.ROTATION_90, mDevice.getDisplayRotation());
+        } finally {
+            mDevice.setOrientationNatural();
+            mDevice.unfreezeRotation();
+        }
+    }
+
+    private void setOrientationNaturalAndWait() throws RemoteException {
+        mDevice.setOrientationNatural();
+        while (Surface.ROTATION_0 != mDevice.getDisplayRotation()) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(10L);
+            } catch (InterruptedException e) {
+            }
+        }
+    }
 
     @Test
     public void testVideoTitle_whenSubjectInvalid_shouldDisplaySubjectUntouched() {
@@ -150,6 +202,45 @@ public class MainActivityTest {
 
         onView(withId(R.id.edit_text_title))
                 .check(matches(withText(TITLE)));
+    }
+
+    @Test
+    public void testArtistAndTitle_whenRotated_shouldRetainEditedArtistAndTitle() throws RemoteException {
+        try {
+            String newArtist = "my artist";
+            String newTitle = "my title";
+
+            mActivityRule.launchActivity(newIntent(TEXT, SUBJECT_WITH_DASH));
+
+            setOrientationNaturalAndWait();
+
+            onView(withId(R.id.edit_text_artist))
+                    .perform(clearText(), typeText(newArtist), closeSoftKeyboard());
+
+            onView(withId(R.id.edit_text_title))
+                    .perform(clearText(), typeText(newTitle), closeSoftKeyboard());
+
+            setOrientationLeftAndWait();
+
+            onView(withId(R.id.edit_text_artist))
+                    .check(matches(withText(newArtist)));
+
+            onView(withId(R.id.edit_text_title))
+                    .check(matches(withText(newTitle)));
+        } finally {
+            mDevice.setOrientationNatural();
+            mDevice.unfreezeRotation();
+        }
+    }
+
+    private void setOrientationLeftAndWait() throws RemoteException {
+        mDevice.setOrientationLeft();
+        while (Surface.ROTATION_90 != mDevice.getDisplayRotation()) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(10L);
+            } catch (InterruptedException e) {
+            }
+        }
     }
 
     @Test

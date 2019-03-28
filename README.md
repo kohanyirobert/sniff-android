@@ -8,5 +8,7 @@
 * `./gradlew initSettings` to initialize app settings automatically using the `local.properties`.
 * `./gradlew connectedAndroidTest` or `./gradlew cAT` to run instrumented tests on device.
 
-**Note**: wanted to update the build files and stuff, but couldn't get to run instrumented tests from Android Studio.
-If I update anymore dependencies after *this* point I cannot run test even from the terminal with `gradle`.
+**Note**: running instrumented tests will fail if the app was already instrumented with `SniffInstrumentation`, not sure why...
+Android tries to run tests with this instrumentation class instead of `AndroidJUnitRunner` in this case.
+If the `<instrumentation>` element is removed from the manifest then this isn't a problem, but `./gradlew initSettings` cannot be run anymore.
+To run tests remove the `<instrumentation>` element from the manifest, run the tests, then revert the manifest.

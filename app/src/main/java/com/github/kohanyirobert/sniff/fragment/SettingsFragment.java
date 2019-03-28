@@ -1,10 +1,11 @@
 package com.github.kohanyirobert.sniff.fragment;
 
 import android.os.Bundle;
-import androidx.preference.PreferenceFragmentCompat;
 import android.view.Menu;
 
 import com.github.kohanyirobert.sniff.R;
+
+import androidx.preference.PreferenceFragmentCompat;
 
 public final class SettingsFragment extends PreferenceFragmentCompat {
 

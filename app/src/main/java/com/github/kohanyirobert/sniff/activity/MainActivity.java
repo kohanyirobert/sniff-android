@@ -3,10 +3,6 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import androidx.annotation.NonNull;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -28,12 +24,17 @@ import com.github.kohanyirobert.sniff.R;
 import com.github.kohanyirobert.sniff.Utils;
 import com.github.kohanyirobert.sniff.fragment.MainFragment;
 import com.github.kohanyirobert.sniff.fragment.SettingsFragment;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import static androidx.fragment.app.FragmentManager.OnBackStackChangedListener;
 import static com.github.kohanyirobert.sniff.fragment.MainFragment.SendClickListener;

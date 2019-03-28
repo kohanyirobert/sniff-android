@@ -4,20 +4,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import com.google.android.material.textfield.TextInputLayout;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.espresso.action.ViewActions;
-import androidx.test.filters.RequiresDevice;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.runner.AndroidJUnit4;
-import androidx.test.uiautomator.SearchCondition;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiWatcher;
-import androidx.test.uiautomator.Until;
 import android.view.Surface;
 import android.view.View;
 
 import com.github.kohanyirobert.sniff.R;
+import com.google.android.material.textfield.TextInputLayout;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -25,14 +16,18 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.test.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
+import androidx.test.uiautomator.UiDevice;
+
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.*;
+import static androidx.test.espresso.action.ViewActions.clearText;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -41,7 +36,9 @@ import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_KEY;
 import static com.github.kohanyirobert.sniff.fragment.SettingsFragment.API_URL;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class MainActivityTest {
 

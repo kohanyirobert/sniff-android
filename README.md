@@ -6,7 +6,7 @@
 * Restart the emulator.
 * `./gradlew installDebug` (or `installRelease`) to install app.
 * `./gradlew initSettings` to initialize app settings automatically using the `local.properties`.
-* `./gradlew connectedAndroidTest` to run instrumented tests on device.
+* `./gradlew connectedAndroidTest` or `./gradlew cAT` to run instrumented tests on device.
 
 **Note**: wanted to update the build files and stuff, but couldn't get to run instrumented tests from Android Studio.
 If I update anymore dependencies after *this* point I cannot run test even from the terminal with `gradle`.

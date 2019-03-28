@@ -43,8 +43,6 @@ import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.junit.Assert.*;
 
-@RunWith(AndroidJUnit4.class)
-@RequiresDevice
 public class MainActivityTest {
 
     private static final String ARTIST = "test artist";

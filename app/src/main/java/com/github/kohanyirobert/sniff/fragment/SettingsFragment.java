@@ -1,7 +1,7 @@
 package com.github.kohanyirobert.sniff.fragment;
 
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat;
 import android.view.Menu;
 
 import com.github.kohanyirobert.sniff.R;

@@ -3,7 +3,7 @@ package com.github.kohanyirobert.sniff.activity;
 import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import static java.lang.String.format;
 

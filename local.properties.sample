@@ -1,0 +1,3 @@
+sdk.dir=<absolute path to the android sdk root directory>
+api_url=<aws production sniff api endpoint>
+api_key=<aws api key>

@@ -4,7 +4,7 @@
 * Gradle 3.3
 * Create a virtual Android device. After launching it update the emulator's config regarding rendering capabilitites ([see this link](https://stackoverflow.com/questions/50595704)). Otherwise the emulator just shows a black screen.
 * Restart the emulator.
-* `./gradlew installDebug` (or `installRelease`) to install app.
+* `./gradlew installDebug` or `installRelease` to install app (**note**: `installRelease` is only available if the APK can be signed an all that jazz).
 * `./gradlew initSettings` to initialize app settings automatically using the `local.properties`.
 * `./gradlew connectedAndroidTest` or `./gradlew cAT` to run instrumented tests on device.
 

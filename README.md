@@ -8,6 +8,9 @@
 * `./gradlew initSettings` to initialize app settings automatically using the `local.properties`.
 * `./gradlew connectedAndroidTest` or `./gradlew cAT` to run instrumented tests on device.
 
+**Important**: `connectedAndroidTest` doesn't seem to work using MIUI 12 with MIUI optimizations turned on for some reason.
+It worked prior MIUI 10 or so, so use an emulator for instrumented tests.
+
 **Note**: for some reason `.\gradlew installDebug` reports success, however install fails silently, `pm list packages` doesn't contain the package.
 If this happens run `./gradlew uninstallAll` then install again.
 

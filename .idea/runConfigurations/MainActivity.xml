@@ -7,15 +7,13 @@
     <option name="ARTIFACT_NAME" value="" />
     <option name="PM_INSTALL_OPTIONS" value="" />
     <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
-    <option name="ACTIVITY_EXTRA_FLAGS" value="-e com.github.kohanyirobert.sniff.activity.EXTRA_MODE DEVELOPMENT -e android.intent.extra.TEXT https://www.youtube.com/watch?v=AAAaaa -e android.intent.extra.SUBJECT &quot;Aaa - Aaa&quot;" />
+    <option name="ACTIVITY_EXTRA_FLAGS" value="-e com.github.kohanyirobert.sniff.activity.EXTRA_MODE DEVELOPMENT -e android.intent.extra.TEXT &quot;https://youtu.be/ZeJr9a21asI&quot; -e android.intent.extra.SUBJECT &quot;Watch \&quot;test artist - test subject\&quot; on YouTube&quot;" />
     <option name="MODE" value="specific_activity" />
     <option name="CLEAR_LOGCAT" value="false" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
     <option name="SKIP_NOOP_APK_INSTALLATIONS" value="true" />
     <option name="FORCE_STOP_RUNNING_APP" value="true" />
     <option name="TARGET_SELECTION_MODE" value="SHOW_DIALOG" />
-    <option name="USE_LAST_SELECTED_DEVICE" value="false" />
-    <option name="PREFERRED_AVD" value="" />
     <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
     <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
     <option name="DEBUGGER_TYPE" value="Auto" />

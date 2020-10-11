@@ -8,6 +8,9 @@
 * `./gradlew initSettings` to initialize app settings automatically using the `local.properties`.
 * `./gradlew connectedAndroidTest` or `./gradlew cAT` to run instrumented tests on device.
 
+**Note**: for some reason `.\gradlew installDebug` reports success, however install fails silently, `pm list packages` doesn't contain the package.
+If this happens run `./gradlew uninstallAll` then install again.
+
 **Note**: running instrumented tests will fail if the app was already instrumented with `SniffInstrumentation`, not sure why...
 Android tries to run tests with this instrumentation class instead of `AndroidJUnitRunner` in this case.
 If the `<instrumentation>` element is removed from the manifest then this isn't a problem, but `./gradlew initSettings` cannot be run anymore.
